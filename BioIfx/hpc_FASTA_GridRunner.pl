@@ -160,7 +160,7 @@ while (my $fastaSet = &get_next_fasta_entries($fastaReader, $bin_size) ) {
 	}
 }
 
-print STDERR "Sequences to search: @searchFileList\n";
+#print STDERR "Sequences to search: @searchFileList\n";
 my $numFiles = @searchFileList;
 print STDERR "There are $numFiles jobs to run.\n";
 
