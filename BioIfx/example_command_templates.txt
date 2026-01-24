@@ -8,3 +8,6 @@
 
 --cmd_template "blastp -query __QUERY_FILE__ -db /seq/RNASEQ/DBs/SWISSPROT/current/uniprot_sprot.fasta  -max_target_seqs 1 -outfmt 6 -evalue 1e-5 -num_threads 2"
 
+## example blastx with diamond
+
+~/HpcGridRunner/BioIfx/hpc_FASTA_GridRunner.pl --cmd_template "diamond blastx -d /blastdb/diamond_Sprot/swissprot -q __QUERY_FILE__ --evalue 1e-3 --max-target-seqs 1 --outfmt 6 --threads 20 --more-sensitive" --query_fasta ../Trinity_20pct.Trinity.fasta --grid_conf ~/HpcGridRunner/hpc_conf/SLURM.test.conf --parafly -N 100 -O blast_20pct.swssprot.outfmt6
