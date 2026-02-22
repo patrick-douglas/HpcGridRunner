@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ====== CONFIG (ajuste aqui) ======
+CPU="20"
+MAX_MEM="100G"
+
+GRIDRUNNER="/home/me/HpcGridRunner/grid_exec_wrap.sh"
+GRIDCONF="/home/me/HpcGridRunner/hpc_conf/SLURM.Trinity.conf"
+
+# Percentuais que você quer rodar (10 em 10)
+PCTS=(1)
+
+# Se quiser forçar re-run quando output já existe:
+FORCE=1
+# ==================================
+
+# Checagens
+command -v Trinity >/dev/null 2>&1 || { echo "ERRO: Trinity não encontrado no PATH"; exit 1; }
+[[ -f "$GRIDRUNNER" ]] || { echo "ERRO: não achei $GRIDRUNNER"; exit 1; }
+[[ -f "$GRIDCONF" ]]   || { echo "ERRO: não achei $GRIDCONF"; exit 1; }
+
+for pct in "${PCTS[@]}"; do
+  dir="${pct}"
+  fq="reads_${pct}pct.fq"
+  out="reads_${pct}pct.trinity_out"
+
+  echo
+  echo "=============================="
+  echo ">> ${pct}% (pasta: ${dir})"
+  echo "=============================="
+
+  [[ -d "$dir" ]] || { echo "AVISO: pasta '$dir' não existe, pulando"; continue; }
+
+  pushd "$dir" >/dev/null
+
+  if [[ ! -f "$fq" ]]; then
+    echo "AVISO: não achei $dir/$fq, pulando"
+    popd >/dev/null
+    continue
+  fi
+
+  if [[ -d "$out" && "$FORCE" -eq 0 ]]; then
+    echo "AVISO: output '$dir/$out' já existe. (FORCE=0) Pulando."
+    popd >/dev/null
+    continue
+  fi
+
+  # Se FORCE=1 e output existe, apaga antes
+  if [[ -d "$out" && "$FORCE" -eq 1 ]]; then
+    echo "FORCE=1: removendo output antigo $dir/$out"
+    rm -rf "$out"
+  fi
+
+  Trinity \
+    --seqType fq \
+    --single "$fq" \
+    --full_cleanup \
+    --max_memory "$MAX_MEM" \
+    --CPU "$CPU" \
+    --grid_exec "$GRIDRUNNER --grid_conf $GRIDCONF -c" \
+    --grid_node_CPU '$(nproc)' \
+    --grid_node_max_memory "$(free -g | awk '/^Mem:/ {print $2}')G" \
+    --output "$out"
+  popd >/dev/null
+done
+
+echo
+echo "✅ Done. Trinity rodou para os percentuais definidos."
