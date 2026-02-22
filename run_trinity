@@ -9,7 +9,7 @@ GRIDRUNNER="/home/me/HpcGridRunner/grid_exec_wrap.sh"
 GRIDCONF="/home/me/HpcGridRunner/hpc_conf/SLURM.Trinity.conf"
 
 # Percentuais que você quer rodar (10 em 10)
-PCTS=(1)
+PCTS=(1 10 20 30 40 50 60 70 80 90)
 
 # Se quiser forçar re-run quando output já existe:
 FORCE=1
@@ -58,7 +58,7 @@ for pct in "${PCTS[@]}"; do
     --full_cleanup \
     --max_memory "$MAX_MEM" \
     --CPU "$CPU" \
-    --grid_exec "$GRIDRUNNER --grid_conf $GRIDCONF -c" \
+    --grid_exec "$GRIDRUNNER --parafly --grid_conf $GRIDCONF -c" \
     --grid_node_CPU '$(nproc)' \
     --grid_node_max_memory "$(free -g | awk '/^Mem:/ {print $2}')G" \
     --output "$out"

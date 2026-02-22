@@ -45,7 +45,6 @@ prefix_once = (
     'echo "HOST=$(hostname)"; '
     'echo "PWD=$(pwd)"; '
     'echo "DATE=$(date)"; '
-    'echo "nproc=$(nproc)"; '
     'echo "_NPROCESSORS_ONLN=$(getconf _NPROCESSORS_ONLN)"; '
     'echo "cpuinfo_processors=$(grep -c ^processor /proc/cpuinfo)"; '
     'echo "Cpus_allowed_list=$(grep Cpus_allowed_list /proc/self/status | awk \'{print $2}\')"; '
