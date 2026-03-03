@@ -2,31 +2,20 @@
 set -euo pipefail
 
 # ====== CONFIG (ajuste aqui) ======
-# Onde está o executável que gera/submete os jobs por FASTA
 HPC_FASTA_GR="/home/me/HpcGridRunner/BioIfx/hpc_FASTA_GridRunner.pl"
-
-# Grid conf (Slurm)
 GRIDCONF="/home/me/HpcGridRunner/hpc_conf/SLURM.blast.conf"
 
-# DB do DIAMOND (prefix do .dmnd, sem extensão)
+# DB do DIAMOND (prefix do .dmnd, sem extensão)  <<-- se você usa fasta, ok também, mas normalmente é .dmnd
 DIAMOND_DB="/blastdb/sprot/uniprot_sprot.fasta"
 
-# Parâmetros do DIAMOND
 EVALUE="1e-3"
 MAX_TARGETS="1"
 OUTFMT="6"
 SENS="--more-sensitive"
 
-# threads por task (vai ser o --threads dentro do diamond)
-THREADS="20"
-
-# Split do FASTA (seqs por bin)
 SEQS_PER_BIN="100"
-
-# Percentuais pra rodar
 PCTS=(1)
 
-# Se quiser re-run quando output já existe:
 FORCE=1
 # ==================================
 
@@ -36,7 +25,7 @@ FORCE=1
 
 for pct in "${PCTS[@]}"; do
   dir="${pct}"
-  trinity_fa="reads_${pct}pct.trinity_out.Trinity.fasta"
+  trinity_fa="reads_${pct}pct.trinity_out.Trinity.fasta2"
   out_prefix="blast_${pct}pct_swissprot"
   out_file="${out_prefix}.outfmt6"
 
@@ -63,19 +52,29 @@ for pct in "${PCTS[@]}"; do
 
   if [[ -f "$out_file" && "$FORCE" -eq 1 ]]; then
     echo "FORCE=1: removendo output antigo $dir/$out_file"
-    rm -rf "$out_file"
-    rm -rf farmit* *.cmds *.cache_success
+    rm -f "$out_file" "${out_file}.txt" 2>/dev/null || true
+    rm -rf "$out_file" farmit* *.cmds *.cache_success 2>/dev/null || true
   fi
 
-  # Template (usa __QUERY_FILE__ que o hpc_FASTA_GridRunner substitui)
-  cmd_template="diamond blastx \
-    -d ${DIAMOND_DB} \
-    -q __QUERY_FILE__ \
-    --evalue ${EVALUE} \
-    --max-target-seqs ${MAX_TARGETS} \
-    --outfmt ${OUTFMT} \
-    --threads \$(getconf _NPROCESSORS_ONLN) \
-    ${SENS}"
+  # Template: usa __QUERY_FILE__ e mantém $(getconf ...) literal para ser avaliado no node
+  cmd_template="$(cat <<'EOF'
+diamond blastx \
+  -d __DIAMOND_DB__ \
+  -q __QUERY_FILE__ \
+  --evalue __EVALUE__ \
+  --max-target-seqs __MAX_TARGETS__ \
+  --outfmt __OUTFMT__ \
+  --threads $(getconf _NPROCESSORS_ONLN) \
+  __SENS__
+EOF
+)"
+
+  # Substitui placeholders "nossos" (mais seguro do que misturar aspas)
+  cmd_template="${cmd_template/__DIAMOND_DB__/${DIAMOND_DB}}"
+  cmd_template="${cmd_template/__EVALUE__/${EVALUE}}"
+  cmd_template="${cmd_template/__MAX_TARGETS__/${MAX_TARGETS}}"
+  cmd_template="${cmd_template/__OUTFMT__/${OUTFMT}}"
+  cmd_template="${cmd_template/__SENS__/${SENS}}"
 
   # Submete via GridRunner
   "$HPC_FASTA_GR" \
@@ -85,6 +84,17 @@ for pct in "${PCTS[@]}"; do
     --parafly \
     -N "$SEQS_PER_BIN" \
     -O "$out_file"
+
+  # Unificar os arquivos .OUT (recursivo + ordenado)
+  echo ">> Unindo fragmentos .OUT dentro de: $out_file"
+  if find "$out_file" -type f -name "*.OUT" | grep -q .; then
+    find "$out_file" -type f -name "*.OUT" -print0 \
+      | sort -z -V \
+      | xargs -0 cat > "${out_file}.txt"
+    echo ">> OK: ${out_file}.txt"
+  else
+    echo "!! AVISO: não encontrei nenhum *.OUT em $out_file"
+  fi
 
   popd >/dev/null
 done

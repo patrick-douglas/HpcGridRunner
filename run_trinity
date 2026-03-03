@@ -9,7 +9,7 @@ GRIDRUNNER="/home/me/HpcGridRunner/grid_exec_wrap.sh"
 GRIDCONF="/home/me/HpcGridRunner/hpc_conf/SLURM.Trinity.conf"
 
 # Percentuais que você quer rodar (10 em 10)
-PCTS=(70 80 90)
+PCTS=(90)
 
 # Se quiser forçar re-run quando output já existe:
 FORCE=1
