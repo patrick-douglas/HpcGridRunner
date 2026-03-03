@@ -14,7 +14,7 @@ OUTFMT="6"
 SENS="--more-sensitive"
 
 SEQS_PER_BIN="100"
-PCTS=(1)
+PCTS=(10 20 30 40 50 60 70 80 90)
 
 FORCE=1
 # ==================================
@@ -25,7 +25,7 @@ FORCE=1
 
 for pct in "${PCTS[@]}"; do
   dir="${pct}"
-  trinity_fa="reads_${pct}pct.trinity_out.Trinity.fasta2"
+  trinity_fa="reads_${pct}pct.trinity_out.Trinity.fasta"
   out_prefix="blast_${pct}pct_swissprot"
   out_file="${out_prefix}.outfmt6"
 
