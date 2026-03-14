@@ -13,7 +13,7 @@ MAX_TARGETS="1"
 OUTFMT="6"
 SENS="--more-sensitive"
 
-SEQS_PER_BIN="500"
+SEQS_PER_BIN="1000"
 PCTS=(100)
 
 FORCE=1
@@ -58,14 +58,7 @@ for pct in "${PCTS[@]}"; do
 
   # Template: usa __QUERY_FILE__ e mantém $(getconf ...) literal para ser avaliado no node
   cmd_template="$(cat <<'EOF'
-diamond blastx \
-  -d __DIAMOND_DB__ \
-  -q __QUERY_FILE__ \
-  --evalue __EVALUE__ \
-  --max-target-seqs __MAX_TARGETS__ \
-  --outfmt __OUTFMT__ \
-  --threads $(getconf _NPROCESSORS_ONLN) \
-  __SENS__
+diamond blastx -d __DIAMOND_DB__ -q __QUERY_FILE__ --evalue __EVALUE__ --max-target-seqs __MAX_TARGETS__ --outfmt __OUTFMT__ --threads $(getconf _NPROCESSORS_ONLN) __SENS__
 EOF
 )"
 
