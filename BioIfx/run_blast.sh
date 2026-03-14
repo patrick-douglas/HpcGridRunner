@@ -77,20 +77,27 @@ EOF
     --parafly \
     -N "$SEQS_PER_BIN" \
     -O "$out_file"
-
   # Unificar os arquivos .OUT (recursivo + ordenado)
   echo ">> Unindo fragmentos .OUT dentro de: $out_file"
-  if find "$out_file" -type f -name "*.OUT" | grep -q .; then
-    find "$out_file/*" -type f -name "*.OUT" -print0 \
-      | sort -z -V \
-      | xargs -0 cat > "${out_file}.txt"
-    echo ">> OK: ${out_file}.txt"
+
+  sleep 2
+
+  outs=()
+  mapfile -t outs < <(
+    find "$PWD/$out_file" -type f -name "*.OUT" -size +0c | sort -V
+  )
+
+  if [ "${#outs[@]}" -gt 0 ]; then
+    cat "${outs[@]}" > "${out_file}.txt"
+    echo ">> OK: ${out_file}.txt (${#outs[@]} arquivos)"
   else
-    echo "!! AVISO: não encontrei nenhum *.OUT em $out_file"
+    echo "!! AVISO: não encontrei nenhum *.OUT em $PWD/$out_file"
   fi
+
 
   popd >/dev/null
 done
 
 echo
 echo "✅ Done. DIAMOND blastx submetido para os percentuais definidos."
+
