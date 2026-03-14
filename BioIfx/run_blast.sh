@@ -13,8 +13,8 @@ MAX_TARGETS="1"
 OUTFMT="6"
 SENS="--more-sensitive"
 
-SEQS_PER_BIN="100"
-PCTS=(10 20 30 40 50 60 70 80 90)
+SEQS_PER_BIN="500"
+PCTS=(100)
 
 FORCE=1
 # ==================================
@@ -88,7 +88,7 @@ EOF
   # Unificar os arquivos .OUT (recursivo + ordenado)
   echo ">> Unindo fragmentos .OUT dentro de: $out_file"
   if find "$out_file" -type f -name "*.OUT" | grep -q .; then
-    find "$out_file" -type f -name "*.OUT" -print0 \
+    find "$out_file/*" -type f -name "*.OUT" -print0 \
       | sort -z -V \
       | xargs -0 cat > "${out_file}.txt"
     echo ">> OK: ${out_file}.txt"
